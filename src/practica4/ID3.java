@@ -99,8 +99,7 @@ public class ID3 {
         decisionTree = null;
     }
 
-    public ID3(String[] attributes, HashMap<String[], Boolean>
-            knowledgeBase) throws UnexpectedValueException {
+    public ID3(String[] attributes, HashMap<String[], Boolean> knowledgeBase) throws UnexpectedValueException {
         /* Crea una instancia de la implementación del algoritmo inicializando
          * todos los valores. Si la longitud de los patrones en la base de
          * conocimientos no corresponde a la longitud del arreglo de atributos,
@@ -160,20 +159,30 @@ public class ID3 {
     private double entropy(HashMap<String[], Boolean> set) {
         Integer yes = 0, no = 0;
         for (Boolean decision : set.values()) {
-            if (decision) yes++;
-            else no++;
+            if (decision) {
+                yes++;
+            } else {
+                no++;
+            }
         }
         double rtrn = 0.0;
-        if (yes > 0) rtrn += yes / set.size() * log(yes / set.size());
-        if (no > 0) rtrn += no / set.size() * log(no / set.size());
+        if (yes > 0) {
+            rtrn += yes / set.size() * log(yes / set.size());
+        }
+        if (no > 0) {
+            rtrn += no / set.size() * log(no / set.size());
+        }
         return rtrn / log(2);
     }
 
     private Boolean mostCommon(HashMap<String[], Boolean> set) {
         Integer yes = 0, no = 0;
         for (Boolean decision : set.values()) {
-            if (decision) yes++;
-            else no++;
+            if (decision) {
+                yes++;
+            } else {
+                no++;
+            }
         }
         if (yes != no) {
             return yes > no;
@@ -183,11 +192,12 @@ public class ID3 {
         }
     }
 
-    private double gain (HashMap<String[], Boolean> set, Integer attrIndex) {
+    private double gain(HashMap<String[], Boolean> set, Integer attrIndex) {
         Double rtrn = entropy(set);
         ArrayList<HashMap> subSets = new ArrayList<HashMap>();
         for (String[] pattern : set.keySet()) {
-            seek: { // for ... else
+            seek:
+            { // for ... else
                 for (HashMap<String[], Boolean> subSet : subSets) {
                     Set<String[]> keys = subSet.keySet();
                     if (!keys.isEmpty()) {
@@ -198,14 +208,13 @@ public class ID3 {
                         }
                     }
                 }
-                HashMap<String[], Boolean> newSet = new HashMap<String[],
-                        Boolean>();
+                HashMap<String[], Boolean> newSet = new HashMap<String[], Boolean>();
                 newSet.put(pattern, set.get(pattern));
                 subSets.add(newSet);
             }
         }
         for (HashMap<String[], Boolean> subSet : subSets) {
-            rtrn += subSet.size()/set.size() * entropy(subSet);
+            rtrn += subSet.size() / set.size() * entropy(subSet);
         }
         return rtrn;
     }
@@ -231,16 +240,16 @@ public class ID3 {
         attrIndexes.remove(new Integer(bestAttrIndex)); // remove(Object o)
         HashMap<String, HashMap> subSets = new HashMap<String, HashMap>();
         for (String[] pattern : set.keySet()) {
-            seek: { // for ... else
+            seek:
+            { // for ... else
                 for (String attrVal : subSets.keySet()) {
                     if (pattern[bestAttrIndex].equals(attrVal)) {
                         subSets.get(attrVal).put(pattern,
                                 set.get(pattern));
                         break seek;
-                    } 
+                    }
                 }
-                subSets.put(pattern[bestAttrIndex], new HashMap<String[],
-                        Boolean>());
+                subSets.put(pattern[bestAttrIndex], new HashMap<String[], Boolean>());
                 subSets.get(pattern[bestAttrIndex]).put(pattern,
                         set.get(pattern));
             }
@@ -253,14 +262,16 @@ public class ID3 {
         return attributes[bestAttrIndex];
     }
 
-    protected Boolean traverse (String[] pattern, Node currentNode) throws
+    protected Boolean traverse(String[] pattern, Node currentNode) throws
             UnexpectedValueException {
         if (currentNode.decision != null) {
             return currentNode.decision;
         }
         Integer i;
         for (i = 0; i < attributes.length; i++) {
-            if (attributes[i] == currentNode) break;
+            if (attributes[i] == currentNode) {
+                break;
+            }
         }
         HashMap<String, Node> sons = currentNode.getSons();
         for (String value : sons.keySet()) {
@@ -284,8 +295,8 @@ public class ID3 {
         }
         if (decisionTree == null) {
             throw new UnexpectedActionException();
-        } else if (decisionTree.getDecision() == null &&
-                decisionTree.getSons() == null) {
+        } else if (decisionTree.getDecision() == null
+                && decisionTree.getSons() == null) {
             throw new UnexpectedActionException();
         }
         return traverse(pattern, decisionTree);
@@ -317,12 +328,14 @@ public class ID3 {
          * flujo de salida. Lanza una excepción si no se encuentra el árbol ó
          * los atributos.
          */
-        if (decisionTree == null) throw new UnexpectedActionException();
-        String header = "/**\n";
+        if (decisionTree == null) {
+            throw new UnexpectedActionException();
+        }
+        String header = "/* ATTRIBUTES\n";
         for (Node attribute : attributes) {
             header += " * " + attribute.getAttribute() + "\n";
         }
-        header += " */\n" + "digraph ID3 {\n";
+        header += " * ATTRIBUTES\n" + " */\n" + "digraph ID3 {\n";
         bw.write(header);
         String content;
         if (decisionTree.getDecision() != null) {
@@ -340,13 +353,13 @@ public class ID3 {
         Map<String, Node> sons = currentNode.getSons();
         for (String value : sons.keySet()) {
             Node son = sons.get(value);
-            String next;
             if (son.getDecision() == null) {
-                next = son.getAttribute();
-                rtrn += "    " + currentNode.getAttribute() + " -> " + next +
-                    "[weight=" + value + "];\n" + print(son);
+                rtrn += "    " + currentNode.getAttribute() + " -> "
+                    + son.getAttribute() + "[weight=" + value + "];\n"
+                    + print(son);
             } else {
-                next = "" + son.getDecision();
+                rtrn += "    " + currentNode.getAttribute() + " -> "
+                    + son.getDecision() + "[weight=" + value + "];\n";
             }
         }
         return rtrn;
@@ -387,8 +400,8 @@ public class ID3 {
          */
         return knowledgeBase;
     }
-    
-    public static void main (String[] args) {
+
+    public static void main(String[] args) {
         HashMap kb = new HashMap<String[], Boolean>();
         String[] pattern = {"sunny", "hot", "high", "weak"};
         kb.put(pattern, false);
@@ -462,7 +475,7 @@ public class ID3 {
         pattern[2] = "high";
         pattern[3] = "strong";
         kb.put(pattern, false);
-        String[] attributes =  new String[4];
+        String[] attributes = new String[4];
         attributes[0] = "outlook";
         attributes[1] = "temperature";
         attributes[2] = "humidity";
@@ -476,8 +489,7 @@ public class ID3 {
             String[] testPattern = {"sunny", "mild", "high", "strong"};
             System.out.println("TEST");
             System.out.println(instance.evaluate(testPattern));
-            instance.dump(new BufferedWriter(new FileWriter(new
-                File("dmp.dot"))));
+            instance.dump(new BufferedWriter(new FileWriter(new File("dmp.dot"))));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
