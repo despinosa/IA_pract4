@@ -1,11 +1,15 @@
 package practica4;
 
+import java.io.BufferedWriter;
 import static java.lang.Math.log;
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -129,7 +133,7 @@ public class ID3 {
         }
     }
 
-    public ID3(InputStream is) throws IOException,
+    public ID3(BufferedReader br) throws IOException,
             UnexpectedValueException {
         /* Crea una instancia de la implementación del algoritmo a partir de un
          * flujo de entrada en formato DOT. Inicializa los atributos y el árbol
@@ -156,11 +160,8 @@ public class ID3 {
     private double entropy(HashMap<String[], Boolean> set) {
         Integer yes = 0, no = 0;
         for (Boolean decision : set.values()) {
-            if (decision) {
-                yes++;
-            } else {
-                no++;
-            }
+            if (decision) yes++;
+            else no++;
         }
         double rtrn = 0.0;
         if (yes > 0) rtrn += yes / set.size() * log(yes / set.size());
@@ -171,11 +172,8 @@ public class ID3 {
     private Boolean mostCommon(HashMap<String[], Boolean> set) {
         Integer yes = 0, no = 0;
         for (Boolean decision : set.values()) {
-            if (decision) {
-                yes++;
-            } else {
-                no++;
-            }
+            if (decision) yes++;
+            else no++;
         }
         if (yes != no) {
             return yes > no;
@@ -257,10 +255,10 @@ public class ID3 {
 
     protected Boolean traverse (String[] pattern, Node currentNode) throws
             UnexpectedValueException {
-        Integer i;
         if (currentNode.decision != null) {
             return currentNode.decision;
         }
+        Integer i;
         for (i = 0; i < attributes.length; i++) {
             if (attributes[i] == currentNode) break;
         }
@@ -293,7 +291,7 @@ public class ID3 {
         return traverse(pattern, decisionTree);
     }
 
-    public Boolean[] evaluate(InputStream is) throws IOException,
+    public Boolean[] evaluate(BufferedReader br) throws IOException,
             UnexpectedValueException, UnexpectedActionException {
         /* Evalúa un conjunto de patrones de entrada recibidos a través de un
          * flujo de entrada en formato CSV con el árbol de decisión ya
@@ -303,7 +301,7 @@ public class ID3 {
         return null;
     }
 
-    public void load(InputStream is) throws IOException,
+    public void load(BufferedReader br) throws IOException,
             UnexpectedValueException {
         /* Carga un árbol de decisión a partir de un flujo de entrada en
          * formato DOT, que contiene el conjunto de atributos y el árbol.
@@ -313,12 +311,45 @@ public class ID3 {
          */
     }
 
-    public void dump(OutputStream os) throws IOException,
+    public void dump(BufferedWriter bw) throws IOException,
             UnexpectedActionException {
         /* Vacía el árbol de decisión ya existente en formato DOT sobre un
          * flujo de salida. Lanza una excepción si no se encuentra el árbol ó
          * los atributos.
          */
+        if (decisionTree == null) throw new UnexpectedActionException();
+        String header = "/**\n";
+        for (Node attribute : attributes) {
+            header += " * " + attribute.getAttribute() + "\n";
+        }
+        header += " */\n" + "digraph ID3 {\n";
+        bw.write(header);
+        String content;
+        if (decisionTree.getDecision() != null) {
+            content = "    " + decisionTree.getDecision() + ";\n";
+        } else {
+            content = print(decisionTree);
+        }
+        bw.write(content);
+        bw.write("}");
+        bw.close();
+    }
+
+    protected String print(Node currentNode) {
+        String rtrn = "";
+        Map<String, Node> sons = currentNode.getSons();
+        for (String value : sons.keySet()) {
+            Node son = sons.get(value);
+            String next;
+            if (son.getDecision() == null) {
+                next = son.getAttribute();
+                rtrn += "    " + currentNode.getAttribute() + " -> " + next +
+                    "[weight=" + value + "];\n" + print(son);
+            } else {
+                next = "" + son.getDecision();
+            }
+        }
+        return rtrn;
     }
 
     public String[] getAttributes() {
@@ -445,6 +476,8 @@ public class ID3 {
             String[] testPattern = {"sunny", "mild", "high", "strong"};
             System.out.println("TEST");
             System.out.println(instance.evaluate(testPattern));
+            instance.dump(new BufferedWriter(new FileWriter(new
+                File("dmp.dot"))));
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
