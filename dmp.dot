@@ -1,0 +1,19 @@
+/* ATTRIBUTES
+ * outlook
+ * temperature
+ * humidity
+ * wind
+ * ATTRIBUTES
+ */
+digraph ID3 {
+    outlook -> temperature[weight=sunny];
+    temperature -> true[weight=cool];
+    temperature -> humidity[weight=mild];
+    humidity -> true[weight=normal];
+    humidity -> false[weight=high];
+    temperature -> false[weight=hot];
+    outlook -> true[weight=overcast];
+    outlook -> wind[weight=rain];
+    wind -> false[weight=strong];
+    wind -> true[weight=weak];
+}
